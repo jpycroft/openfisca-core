@@ -804,6 +804,9 @@ def period(value):
     >>> period('year:2014-2')
     Period((YEAR, Instant((2014, 2, 1)), 1))
     """
+    if isinstance(value, datetime.date):
+        value = str(value)
+
     if isinstance(value, Period):
         return value
 
