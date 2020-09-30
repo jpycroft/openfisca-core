@@ -190,6 +190,15 @@ class TaxBenefitSystem(object):
         """
         return self.load_variable(variable, update = True)
 
+    def update_variables(self, *variable_names):
+        """
+        Updates a list of existing OpenFisca variables in the tax and benefit system.
+
+        See also :any:`neutralize_variable`
+        """
+        for variable in variable_names:
+            self.load_variable(variable, update = True)
+
     def add_variables_from_file(self, file_path):
         """
         Adds all OpenFisca variables contained in a given file to the tax and benefit system.
@@ -318,6 +327,15 @@ class TaxBenefitSystem(object):
         Trying to set inputs for a neutralized variable has no effect except raising a warning.
         """
         self.variables[variable_name] = get_neutralized_variable(self.get_variable(variable_name))
+
+    def neutralize_variables(self, *variable_names):
+        """
+        Neutralizes a list of OpenFisca variables existing in the tax and benefit system.
+
+        See also :any:`neutralize_variable`
+        """
+        for variable_name in variable_names:
+            self.variables[variable_name] = get_neutralized_variable(self.get_variable(variable_name))
 
     def annualize_variable(self, variable_name: str, period: Optional[Period] = None):
         self.variables[variable_name] = get_annualized_variable(self.get_variable(variable_name, period))
