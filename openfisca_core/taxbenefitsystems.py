@@ -194,7 +194,7 @@ class TaxBenefitSystem(object):
         """
         Updates a list of existing OpenFisca variables in the tax and benefit system.
 
-        See also :any:`neutralize_variable`
+        See also :any:`update_variable`
         """
         for variable in variable_names:
             self.load_variable(variable, update = True)
