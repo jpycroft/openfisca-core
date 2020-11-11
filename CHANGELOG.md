@@ -1,5 +1,30 @@
 # Changelog
 
+### 34.7.7 [#951](https://github.com/openfisca/openfisca-core/pull/951)
+
+#### Technical changes
+
+- Avoid Web API failure with _dynamic_ variable generation
+- Using reforms to create _dynamic_ variables can lead to a failure to start the API because introspection is failing to get a `source code` section
+
+### 34.7.6 [#957](https://github.com/openfisca/openfisca-core/pull/957)
+
+#### Technical changes
+
+- Update dependencies: `sortedcontainers`
+
+### 34.7.5 [#958](https://github.com/openfisca/openfisca-core/pull/958)
+
+#### Technical changes
+
+- Fix `PytestDeprecationWarning` on `openfisca test` command
+
+### 34.7.4 [#955](https://github.com/openfisca/openfisca-core/pull/955)
+
+#### Technical changes
+
+- Update dependencies: flake8 (style consistency enforcement)
+
 ### 34.7.3 [#953](https://github.com/openfisca/openfisca-core/pull/953)
 
 #### Technical changes
@@ -10,7 +35,7 @@
 
 #### Technical changes
 
-- Revert `dpath` dependency bump introduced by [#940](https://github.com/openfisca/openfisca-core/pull/940) 
+- Revert `dpath` dependency bump introduced by [#940](https://github.com/openfisca/openfisca-core/pull/940)
   - Fix bug in period interpretation by Web API ([openfisca-france#1413](https://github.com/openfisca/openfisca-france/issues/1413))
 
 ### 34.7.1 [#940](https://github.com/openfisca/openfisca-core/pull/940)
