@@ -19,6 +19,7 @@ from typing import Dict
 
 
 DAY = 'day'
+WEEK = 'week'
 MONTH = 'month'
 YEAR = 'year'
 ETERNITY = 'eternity'
@@ -94,6 +95,10 @@ class Instant(tuple):
         return self[2]
 
     @property
+    def week(self):
+        return datetime.date(self[0], self[1], self[2]).isocalendar()[1]
+
+    @property
     def month(self):
         """Extract month from instant.
 
@@ -116,7 +121,7 @@ class Instant(tuple):
         >>> instant('2014-2-3').period('day', size = 2)
         Period(('day', Instant((2014, 2, 3)), 2))
         """
-        assert unit in (DAY, MONTH, YEAR), 'Invalid unit: {} of type {}'.format(unit, type(unit))
+        assert unit in (DAY, WEEK, MONTH, YEAR), 'Invalid unit: {} of type {}'.format(unit, type(unit))
         assert isinstance(size, int) and size >= 1, 'Invalid size: {} of type {}'.format(size, type(size))
         return Period((unit, self, size))
 
@@ -201,15 +206,32 @@ class Instant(tuple):
         Instant((2014, 12, 31))
         """
         year, month, day = self
-        assert unit in (DAY, MONTH, YEAR), 'Invalid unit: {} of type {}'.format(unit, type(unit))
+        assert unit in (DAY, WEEK, MONTH, YEAR), 'Invalid unit: {} of type {}'.format(unit, type(unit))
         if offset == 'first-of':
-            if unit == MONTH:
+            if unit == WEEK:
+                day -= calendar.weekday(year, month, day)
+                while day < 1:
+                    month -= 1
+                    if month == 0:
+                        year -= 1
+                        month = 12
+                    day += calendar.monthrange(year, month)[1]
+            elif unit == MONTH:
                 day = 1
             elif unit == YEAR:
                 month = 1
                 day = 1
         elif offset == 'last-of':
-            if unit == MONTH:
+            if unit == WEEK:
+                day += 6 - calendar.weekday(year, month, day)
+                month_last_day = calendar.monthrange(year, month)[1]
+                while day > month_last_day:
+                    month += 1
+                    if month == 13:
+                        year += 1
+                        month = 1
+                    day -= month_last_day
+            elif unit == MONTH:
                 day = calendar.monthrange(year, month)[1]
             elif unit == YEAR:
                 month = 12
@@ -218,6 +240,24 @@ class Instant(tuple):
             assert isinstance(offset, int), 'Invalid offset: {} of type {}'.format(offset, type(offset))
             if unit == DAY:
                 day += offset
+                if offset < 0:
+                    while day < 1:
+                        month -= 1
+                        if month == 0:
+                            year -= 1
+                            month = 12
+                        day += calendar.monthrange(year, month)[1]
+                elif offset > 0:
+                    month_last_day = calendar.monthrange(year, month)[1]
+                    while day > month_last_day:
+                        month += 1
+                        if month == 13:
+                            year += 1
+                            month = 1
+                        day -= month_last_day
+                        month_last_day = calendar.monthrange(year, month)[1]
+            elif unit == WEEK:
+                day += 7 * offset
                 if offset < 0:
                     while day < 1:
                         month -= 1
@@ -313,6 +353,7 @@ class Period(tuple):
         if unit == ETERNITY:
             return 'ETERNITY'
         year, month, day = start_instant
+        week = datetime.date(year, month, day).isocalendar()[1]
 
         # 1 year long period
         if (unit == MONTH and size == 12 or unit == YEAR and size == 1):
@@ -334,6 +375,9 @@ class Period(tuple):
                 return '{}-{:02d}-{:02d}'.format(year, month, day)
             else:
                 return '{}:{}-{:02d}-{:02d}:{}'.format(unit, year, month, day, size)
+        
+        if unit == WEEK:
+            return '{}:{}-{:02d}-{:02d}:{}'.format(unit, year, month, day, size)
 
         # complex period
         return '{}:{}-{:02d}:{}'.format(unit, year, month, size)
@@ -430,6 +474,9 @@ class Period(tuple):
 
         if unit == MONTH:
             return [self.first_month.offset(i, MONTH) for i in range(self.size_in_months)]
+
+        if unit == WEEK:
+            return [self.first_week.offset(i, WEEK) for i in range(self.size_in_weeks)]
 
         if unit == DAY:
             return [self.first_day.offset(i, DAY) for i in range(self.size_in_days)]
@@ -601,6 +648,18 @@ class Period(tuple):
         raise ValueError("Cannot calculate number of months in {0}".format(self[0]))
 
     @property
+    def size_in_weeks(self):
+        unit, instant, length = self
+        if unit == WEEK:
+            return length
+        if unit in [MONTH, YEAR]:
+            last_day = self.start.offset(length, unit).offset(-1, DAY)
+            return ((last_day.date - self.start.date).days + 1) // 7
+
+        raise ValueError("Cannot calculate number of weeks in {0}".format(unit))
+        
+
+    @property
     def size_in_days(self):
         """Return the size of the period in days.
 
@@ -613,7 +672,7 @@ class Period(tuple):
 
         if unit == DAY:
             return length
-        if unit in [MONTH, YEAR]:
+        if unit in [WEEK, MONTH, YEAR]:
             last_day = self.start.offset(length, unit).offset(-1, DAY)
             return (last_day.date - self.start.date).days + 1
 
@@ -668,6 +727,17 @@ class Period(tuple):
                         month = 1
                     day -= month_last_day
                     month_last_day = calendar.monthrange(year, month)[1]
+        elif unit == 'week':
+            if size > 1:
+                day += 7 * size - 1
+                month_last_day = calendar.monthrange(year, month)[1]
+                while day > month_last_day:
+                    month += 1
+                    if month == 13:
+                        year += 1
+                        month = 1
+                    day -= month_last_day
+                    month_last_day = calendar.monthrange(year, month)[1]
         else:
             if unit == 'month':
                 month += size
@@ -707,6 +777,10 @@ class Period(tuple):
     @property
     def last_month(self):
         return self.first_month.offset(-1)
+    
+    @property
+    def last_week(self):
+        return self.first_week.offset(-1)
 
     @property
     def last_year(self):
@@ -719,10 +793,22 @@ class Period(tuple):
     @property
     def this_year(self):
         return self.start.offset('first-of', 'year').period('year')
+    
+    @property
+    def this_week(self):
+        return self.start.offset('first-of', 'week').period('week')
+    
+    @property
+    def this_month(self):
+        return self.start.offset('first-of', 'month').period('month')
 
     @property
     def first_month(self):
         return self.start.offset('first-of', 'month').period('month')
+
+    @property
+    def first_week(self):
+        return self.start.offset('first-of', 'week').period('week')
 
     @property
     def first_day(self):
@@ -864,7 +950,7 @@ def period(value):
 
     # left-most component must be a valid unit
     unit = components[0]
-    if unit not in (DAY, MONTH, YEAR):
+    if unit not in (DAY, WEEK, MONTH, YEAR):
         raise_error(value)
 
     # middle component must be a valid iso period
@@ -916,6 +1002,7 @@ def key_period_size(period):
 def unit_weights():
     return {
         DAY: 100,
+        WEEK: 150,
         MONTH: 200,
         YEAR: 300,
         ETERNITY: 400,
