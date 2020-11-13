@@ -174,7 +174,7 @@ class Simulation(object):
                 variable.definition_period
                 ))
 
-        if variable.definition_period not in [periods.DAY, periods.MONTH, periods.YEAR]:
+        if variable.definition_period not in [periods.DAY, periods.WEEK, periods.MONTH, periods.YEAR]:
             raise ValueError("Unable to sum constant variable '{}' over period {}: only variables defined daily, monthly, or yearly can be summed over time.".format(
                 variable.name,
                 period))
@@ -191,23 +191,38 @@ class Simulation(object):
             period = periods.period(period)
 
         # Check that the requested period matches definition_period
-        if variable.definition_period != periods.YEAR:
+        if variable.definition_period not in [periods.YEAR, periods.MONTH, periods.WEEK]:
             raise ValueError("Unable to divide the value of '{}' over time on period {}: only variables defined yearly can be divided over time.".format(
                 variable_name,
                 period))
 
         if period.size != 1:
             raise ValueError("DIVIDE option can only be used for a one-year or a one-month requested period")
-
-        if period.unit == periods.MONTH:
+        
+        if variable.definition_period == periods.WEEK:
+            computation_period = period.this_week
+        elif variable.definition_period == periods.MONTH:
+            computation_period = period.this_month
+        elif variable.definition_period == periods.YEAR:
             computation_period = period.this_year
-            return self.calculate(variable_name, period = computation_period) / 12.
-        elif period.unit == periods.YEAR:
-            return self.calculate(variable_name, period)
+        else:
+            raise ValueError("Unable to divide the value of '{}' to match period {}.".format(
+                variable_name,
+                period))
 
-        raise ValueError("Unable to divide the value of '{}' to match period {}.".format(
-            variable_name,
-            period))
+        if period.unit == periods.DAY:
+            relative_size = computation_period.size_in_days
+        elif period.unit == periods.WEEK:
+            relative_size = computation_period.size_in_days / period.this_week.size_in_days
+        elif period.unit == periods.MONTH:
+            relative_size = computation_period.size_in_months / period.this_month.size_in_days
+        else:
+            raise ValueError("Unable to divide the value of '{}' to match period {}.".format(
+                variable_name,
+                period))
+        
+        return self.calculate(variable_name, period = computation_period) / relative_size
+        
 
     def calculate_output(self, variable_name, period):
         """
