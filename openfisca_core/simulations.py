@@ -215,7 +215,7 @@ class Simulation(object):
         elif period.unit == periods.WEEK:
             relative_size = computation_period.size_in_days / period.this_week.size_in_days
         elif period.unit == periods.MONTH:
-            relative_size = computation_period.size_in_months / period.this_month.size_in_days
+            relative_size = computation_period.size_in_days / period.this_month.size_in_days
         else:
             raise ValueError("Unable to divide the value of '{}' to match period {}.".format(
                 variable_name,
