@@ -199,6 +199,15 @@ class Simulation(object):
         if period.size != 1:
             raise ValueError("DIVIDE option can only be used for a one-year or a one-month requested period")
         
+        rel_size = {
+            (periods.WEEK, periods.DAY): 7,
+            (periods.MONTH, periods.WEEK): 4,
+            (periods.MONTH, periods.DAY): 30,
+            (periods.YEAR, periods.MONTH): 12,
+            (periods.YEAR, periods.WEEK): 52,
+            (periods.YEAR, periods.DAY): 365
+        }
+
         if variable.definition_period == periods.WEEK:
             computation_period = period.this_week
         elif variable.definition_period == periods.MONTH:
@@ -210,12 +219,8 @@ class Simulation(object):
                 variable_name,
                 period))
 
-        if period.unit == periods.DAY:
-            relative_size = computation_period.size_in_days
-        elif period.unit == periods.WEEK:
-            relative_size = computation_period.size_in_days / period.this_week.size_in_days
-        elif period.unit == periods.MONTH:
-            relative_size = computation_period.size_in_days / period.this_month.size_in_days
+        if (variable.definition_period, period.unit) in rel_size:
+            relative_size = rel_size[(variable.definition_period, period.unit)]
         else:
             raise ValueError("Unable to divide the value of '{}' to match period {}.".format(
                 variable_name,
