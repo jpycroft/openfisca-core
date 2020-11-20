@@ -476,7 +476,7 @@ class Period(tuple):
             return [self.first_month.offset(i, MONTH) for i in range(self.size_in_months)]
 
         if unit == WEEK:
-            return [self.first_week.next_week.offset(i, WEEK) for i in range(self.size_in_weeks)]
+            return [self.first_week.offset(i, WEEK) for i in range(self.size_in_weeks)]
 
         if unit == DAY:
             return [self.first_day.next.offset(i, DAY) for i in range(self.size_in_days)]
@@ -808,7 +808,7 @@ class Period(tuple):
 
     @property
     def first_week(self):
-        return self.start.offset('first-of', 'week').period('week')
+        return self.start.offset('first-of', 'week').offset(1, "week").period('week')
 
     @property
     def next_week(self):
