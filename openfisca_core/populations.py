@@ -6,6 +6,7 @@ from typing import Iterable
 
 import numpy as np
 
+from openfisca_core import periods
 from openfisca_core.entities import Role
 from openfisca_core.indexed_enums import EnumArray
 from openfisca_core.holders import Holder
@@ -13,6 +14,7 @@ from openfisca_core.holders import Holder
 
 ADD = 'add'
 DIVIDE = 'divide'
+MATCH = 'match'
 
 
 def projectable(function):
@@ -85,11 +87,25 @@ See more information at <https://openfisca.org/doc/coding-the-legislation/35_per
 
             :returns: A numpy array containing the result of the calculation
         """
+
+        variable = self.simulation.tax_benefit_system.get_variable(variable_name, check_existence = True)
+        def_period_weight = periods.unit_weight(variable.definition_period)
+        if def_period_weight == 400:
+            period = periods.period("ETERNITY")
+
         self.entity.check_variable_defined_for_entity(variable_name)
         self.check_period_validity(variable_name, period)
 
+        period_weight = periods.unit_weight(period.unit)
+
         if options is None:
             options = []
+        
+        if MATCH in options:
+            if def_period_weight > period_weight and def_period_weight < 400:
+                options = [DIVIDE]
+            elif def_period_weight < period_weight and def_period_weight < 400:
+                options = [ADD]
 
         if ADD in options and DIVIDE in options:
             raise ValueError('Options ADD and DIVIDE are incompatible (trying to compute variable {})'.format(variable_name).encode('utf-8'))

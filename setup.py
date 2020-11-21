@@ -13,7 +13,7 @@ general_requirements = [
     'numpy >= 1.11, < 1.18',
     'psutil >= 5.4.7, < 6.0.0',
     'PyYAML >= 3.10',
-    'sortedcontainers == 2.1.0',
+    'sortedcontainers == 2.2.2',
     'numexpr >= 2.7.0, <= 3.0',
     ]
 
@@ -26,18 +26,18 @@ api_requirements = [
 
 dev_requirements = [
     'autopep8 >= 1.4.0, < 1.6.0',
-    'flake8 >= 3.7.0, < 3.8.0',
+    'flake8 >= 3.7.0, < 3.9.0',
     'flake8-bugbear >= 19.3.0, < 20.0.0',
     'flake8-print >= 3.1.0, < 4.0.0',
     'pytest-cov >= 2.6.1, < 3.0.0',
     'mypy >= 0.701, < 0.800',
-    'openfisca-country-template >= 3.6.0rc0, < 4.0.0',
+    'openfisca-country-template >= 3.10.0, < 4.0.0',
     'openfisca-extension-template >= 1.2.0rc0, < 2.0.0'
     ] + api_requirements
 
 setup(
     name = 'OpenFisca-Core',
-    version = '34.7.3',
+    version = '34.7.7',
     author = 'OpenFisca Team',
     author_email = 'contact@openfisca.org',
     classifiers = [
