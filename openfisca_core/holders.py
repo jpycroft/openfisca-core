@@ -12,7 +12,7 @@ from openfisca_core.commons import empty_clone
 from openfisca_core.data_storage import InMemoryStorage, OnDiskStorage
 from openfisca_core.errors import PeriodMismatchError
 from openfisca_core.indexed_enums import Enum
-from openfisca_core.periods import MONTH, YEAR, ETERNITY
+from openfisca_core.periods import DAY, WEEK, MONTH, YEAR, ETERNITY
 from openfisca_core.tools import eval_expression
 
 log = logging.getLogger(__name__)
@@ -209,6 +209,8 @@ class Holder(object):
         if self.variable.definition_period != ETERNITY:
             if period is None:
                 raise ValueError('A period must be specified to set values, except for variables with ETERNITY as as period_definition.')
+            if self.variable.definition_period == WEEK and period.unit == DAY:
+                period = periods.period("{}:{}".format(WEEK, period))
             if (self.variable.definition_period != period.unit or period.size > 1):
                 name = self.variable.name
                 period_size_adj = f'{period.unit}' if (period.size == 1) else f'{period.size}-{period.unit}s'
