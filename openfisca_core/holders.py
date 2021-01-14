@@ -304,13 +304,16 @@ def set_input_divide_by_period(holder, period, array):
         array = np.array(array)
     period_size = period.size
     period_unit = period.unit
-
-    if holder.variable.definition_period == MONTH:
+    if holder.variable.definition_period == DAY:
+        cached_period_unit = periods.DAY
+    elif holder.variable.definition_period == WEEK:
+        cached_period_unit = periods.WEEK
+    elif holder.variable.definition_period == MONTH:
         cached_period_unit = periods.MONTH
     elif holder.variable.definition_period == YEAR:
         cached_period_unit = periods.YEAR
     else:
-        raise ValueError('set_input_divide_by_period can be used only for yearly or monthly variables.')
+        raise ValueError('set_input_divide_by_period can be used only for yearly, monthly, weekly or daily variables.')
 
     after_instant = period.start.offset(period_size, period_unit)
 
