@@ -319,7 +319,7 @@ def set_input_divide_by_period(holder, period, array):
 
     # Count the number of elementary periods to change, and the difference with what is already known.
     remaining_array = array.copy()
-    sub_period = period.start.period(cached_period_unit)
+    sub_period = period.get_subperiods(cached_period_unit)[0]
     sub_periods_count = 0
     while sub_period.start < after_instant:
         existing_array = holder.get_array(sub_period)
@@ -332,7 +332,7 @@ def set_input_divide_by_period(holder, period, array):
     # Cache the input data
     if sub_periods_count > 0:
         divided_array = remaining_array / sub_periods_count
-        sub_period = period.start.period(cached_period_unit)
+        sub_period = period.get_subperiods(cached_period_unit)[0]
         while sub_period.start < after_instant:
             if holder.get_array(sub_period) is None:
                 holder._set(sub_period, divided_array)
