@@ -304,19 +304,22 @@ def set_input_divide_by_period(holder, period, array):
         array = np.array(array)
     period_size = period.size
     period_unit = period.unit
-
-    if holder.variable.definition_period == MONTH:
+    if holder.variable.definition_period == DAY:
+        cached_period_unit = periods.DAY
+    elif holder.variable.definition_period == WEEK:
+        cached_period_unit = periods.WEEK
+    elif holder.variable.definition_period == MONTH:
         cached_period_unit = periods.MONTH
     elif holder.variable.definition_period == YEAR:
         cached_period_unit = periods.YEAR
     else:
-        raise ValueError('set_input_divide_by_period can be used only for yearly or monthly variables.')
+        raise ValueError('set_input_divide_by_period can be used only for yearly, monthly, weekly or daily variables.')
 
     after_instant = period.start.offset(period_size, period_unit)
 
     # Count the number of elementary periods to change, and the difference with what is already known.
     remaining_array = array.copy()
-    sub_period = period.start.period(cached_period_unit)
+    sub_period = period.get_subperiods(cached_period_unit)[0]
     sub_periods_count = 0
     while sub_period.start < after_instant:
         existing_array = holder.get_array(sub_period)
@@ -329,7 +332,7 @@ def set_input_divide_by_period(holder, period, array):
     # Cache the input data
     if sub_periods_count > 0:
         divided_array = remaining_array / sub_periods_count
-        sub_period = period.start.period(cached_period_unit)
+        sub_period = period.get_subperiods(cached_period_unit)[0]
         while sub_period.start < after_instant:
             if holder.get_array(sub_period) is None:
                 holder._set(sub_period, divided_array)
